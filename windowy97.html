@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>𝙡𝙤𝙩erarywindows</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background-color: #008080;
+            background-size: cover;
+            font-family: 'MS Sans Serif', 'Microsoft Sans Serif', Arial, sans-serif;
+            font-size: 12px;
+            overflow: hidden;
+            user-select: none;
+            cursor: default;
+            touch-action: none;
+        }
+
+        /* Desktop area */
+        .desktop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 32px;
+            overflow: hidden;
+        }
+
+        /* Taskbar */
+        .taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 32px;
+            background: #C0C0C0;
+            border-top: 2px solid #FFFFFF;
+            display: flex;
+            z-index: 1000;
+        }
+
+        /* Start button */
+        .start-button {
+            height: 100%;
+            padding: 0 8px;
+            display: flex;
+            align-items: center;
+            background: #C0C0C0;
+            border-right: 1px solid #808080;
+            border-top: 2px solid #FFFFFF;
+            border-left: 2px solid #FFFFFF;
+            border-bottom: 2px solid #808080;
+            font-weight: bold;
+        }
+
+        .start-button:active {
+            border-top: 2px solid #808080;
+            border-left: 2px solid #808080;
+            border-bottom: 2px solid #FFFFFF;
+            border-right: 1px solid #FFFFFF;
+        }
+
+        .start-button img {
+            margin-right: 4px;
+        }
+
+        /* Taskbar clock area */
+        .taskbar-clock {
+            margin-left: auto;
+            height: 100%;
+            padding: 0 8px;
+            display: flex;
+            align-items: center;
+            background: #C0C0C0;
+            border-right: 2px solid #FFFFFF;
+            border-top: 2px solid #808080;
+            border-left: 2px solid #FFFFFF;
+            border-bottom: 2px solid #808080;
+        }
+
+        /* Window styling */
+        .window {
+            position: absolute;
+            border: 2px solid #555;
+            border-radius: 6px 6px 0 0;
+            background: #0d0c11;
+            font-family: monospace;
+            color: #fff;
+            z-index: 100;
+            box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);
+            min-width: 150px;
+            min-height: 100px;
+            resize: none;
+            overflow: hidden;
+        }
+
+        .window-header {
+            background: linear-gradient(to right, #1d1c22, #0d0c11);
+            padding: 4px;
+            display: flex;
+            justify-content: space-between;
+            border-radius: 5px 5px 0 0;
+            cursor: move;
+            user-select: none;
+        }
+
+        .window-title {
+            padding-left: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .window-controls {
+            display: flex;
+        }
+
+        .window-control {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            text-align: center;
+            background: #444;
+            margin-left: 2px;
+            line-height: 18px;
+            cursor: pointer;
+        }
+
+        .window-control.close {
+            background: #c00;
+        }
+
+        .window-content {
+            padding: 8px;
+            height: calc(100% - 30px);
+            overflow: auto;
+        }
+
+        /* Resize handles */
+        .resize-handle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.1);
+            transition: background 0.2s;
+        }
+
+        .resize-handle:hover, .resize-handle:active {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .resize-handle-n {
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            cursor: n-resize;
+            width: 100%;
+        }
+
+        .resize-handle-e {
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 8px;
+            cursor: e-resize;
+            height: 100%;
+        }
+
+        .resize-handle-s {
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            cursor: s-resize;
+            width: 100%;
+        }
+
+        .resize-handle-w {
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 8px;
+            cursor: w-resize;
+            height: 100%;
+        }
+
+        .resize-handle-ne {
+            top: 0;
+            right: 0;
+            width: 10px;
+            height: 10px;
+            cursor: ne-resize;
+        }
+
+        .resize-handle-nw {
+            top: 0;
+            left: 0;
+            width: 10px;
+            height: 10px;
+            cursor: nw-resize;
+        }
+
+        .resize-handle-se {
+            bottom: 0;
+            right: 0;
+            width: 10px;
+            height: 10px;
+            cursor: se-resize;
+        }
+
+        .resize-handle-sw {
+            bottom: 0;
+            left: 0;
+            width: 10px;
+            height: 10px;
+            cursor: sw-resize;
+        }
+
+        .window-resizing {
+            opacity: 0.9;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Control panel */
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 8px;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .control-label {
+            min-width: 100px;
+        }
+
+        .control-input {
+            flex-grow: 1;
+            background: #1d1c22;
+            border: 1px solid #555;
+            color: white;
+            padding: 4px;
+        }
+
+        .control-button {
+            background: #444;
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        .gravity-toggle {
+            background: #f44336;
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 3px;
+            margin-bottom: 8px;
+        }
+
+        /* Mobile specific */
+        @media (max-width: 768px) {
+            .window {
+                min-width: 120px;
+                min-height: 80px;
+            }
+            
+            .window-control {
+                width: 24px;
+                height: 24px;
+                line-height: 24px;
+            }
+            
+            .resize-handle {
+                width: 15px;
+                height: 15px;
+            }
+        }
+        
+.window {
+    transform-origin: center center;
+    transition: transform 0.1s ease-out;
+}
+
+.rotate-handle {
+    position: absolute;
+    right: 50%;
+    top: 5px;
+    width: 20px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    z-index: 1;
+    transform: translateZ(1px);
+}
+
+/* Add this to ensure the window content stays below */
+.window-content {
+    position: relative;
+    z-index: 0;
+}
+
+/* Window Color Variants */
+.window.blue {
+    border-color: #1a73e8;
+    background: #0d47a1;
+}
+
+.window.red {
+    border-color: #d32f2f;
+    background: #b71c1c;
+}
+
+.window.inactive {
+    background: transparent !important;
+    border: 2px dashed currentColor;
+    pointer-events: none;
+}
+
+.window.inactive .window-content {
+    opacity: 0.5;
+}
+
+/* Switch Controls in Window Manager */
+.switch-controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.switch-btn {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.switch-btn.normal {
+    background: #444;
+    color: white;
+}
+
+.switch-btn.blue {
+    background: #1a73e8;
+    color: white;
+}
+
+.switch-btn.red {
+    background: #d32f2f;
+    color: white;
+}
+
+.switch-toggle {
+    margin-top: 8px;
+    padding: 6px;
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+// Add this to your CSS (put it in the style section)
+.vhs-window {
+    background: #000;
+    color: #0f0;
+    font-family: 'Courier New', monospace;
+    border: 1px solid #0f0;
+    overflow: hidden;
+    transition: transform 0.1s ease-out;
+}
+
+.vhs-scanlines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 1px,
+        rgba(0,255,0,0.1) 2px
+    );
+    pointer-events: none;
+    z-index: 1;
+}
+
+.vhs-content {
+    position: relative;
+    z-index: 0;
+    padding: 8px;
+}
+
+
+    </style>
+</head>
+<body>
+    <div class="desktop" id="desktop">
+        <!-- Windows will be added here -->
+    </div>
+
+    <div class="taskbar">
+        <div class="start-button" id="startButton">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4AkEEjIZWY9pLgAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAJklEQVQ4y2NgGAWjYBSMglEwCkbBKBgFIxUwDrcBmGgUjIJRMAoAAJ0kAf8jLQe8AAAAAElFTkSuQmCC" alt="Start">
+            Start
+        </div>
+        <div class="taskbar-clock" id="clock">
+            4:25 PM
+        </div>
+    </div>
+
+    <script>
+// Update clock
+function updateClock() {
+    const now = new Date();
+    let hours = now.getHours();
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    document.getElementById('clock').textContent = `${hours}:${minutes} ${ampm}`;
+}
+
+updateClock();
+setInterval(updateClock, 1000);
+
+let gravityEnabled = false;
+const GRAVITY = 0.5;
+const FRICTION = 0.98;
+const BOUNCE = 0.7;
+const windows = new Map();
+let physicsAnimationId = null;
+let switchState = true;
+const switchableWindows = new Set();
+
+function toggleGravity() {
+    gravityEnabled = !gravityEnabled;
+    const btn = document.getElementById('gravityToggleBtn');
+    btn.textContent = `Gravity: ${gravityEnabled ? 'ON' : 'OFF'}`;
+    btn.style.background = gravityEnabled ? '#4CAF50' : '#f44336';
+    
+    if (gravityEnabled) startPhysics();
+    else stopPhysics();
+}
+
+function startPhysics() {
+    if (physicsAnimationId) cancelAnimationFrame(physicsAnimationId);
+    
+    let lastTime = performance.now();
+    
+    function physicsLoop(currentTime) {
+        if (!gravityEnabled) return;
+        
+        const deltaTime = (currentTime - lastTime) / 1000;
+        lastTime = currentTime;
+        
+        windows.forEach((velocity, window) => {
+            if (!document.body.contains(window)) {
+                windows.delete(window);
+                return;
+            }
+            
+            // Apply forces
+            velocity.y += GRAVITY * deltaTime * 60;
+            
+            // Apply friction
+            velocity.x *= FRICTION;
+            velocity.y *= FRICTION;
+            
+            // Update position with collision detection
+            const dx = velocity.x * deltaTime * 60;
+            const dy = velocity.y * deltaTime * 60;
+            moveWindowWithCollision(window, dx, dy, velocity);
+        });
+        
+        physicsAnimationId = requestAnimationFrame(physicsLoop);
+    }
+    
+    physicsAnimationId = requestAnimationFrame(physicsLoop);
+}
+
+function stopPhysics() {
+    if (physicsAnimationId) {
+        cancelAnimationFrame(physicsAnimationId);
+        physicsAnimationId = null;
+    }
+}
+
+function moveWindowWithCollision(window, dx, dy, velocity) {
+    const rect = window.getBoundingClientRect();
+    const currentLeft = window.offsetLeft;
+    const currentTop = window.offsetTop;
+    
+    let newX = currentLeft + dx;
+    let newY = currentTop + dy;
+    
+    // Exact screen boundaries (using offsetWidth/Height)
+    const maxX = window.parentElement.offsetWidth - window.offsetWidth;
+    const maxY = window.parentElement.offsetHeight - window.offsetHeight;
+
+    // Left/right collisions
+    if (newX < 0) {
+        newX = 0;
+        velocity.x = -velocity.x * BOUNCE;
+    } else if (newX > maxX) {
+        newX = maxX;
+        velocity.x = -velocity.x * BOUNCE;
+    }
+
+    // Top/bottom collisions (account for taskbar)
+    const taskbarHeight = 32;
+    if (newY < 0) {
+        newY = 0;
+        velocity.y = -velocity.y * BOUNCE;
+    } else if (newY > maxY - taskbarHeight) {
+        newY = maxY - taskbarHeight;
+        velocity.y = -velocity.y * BOUNCE;
+        velocity.x *= 0.8; // Extra friction when hitting bottom
+    }
+
+    // Window-to-window collisions
+    windows.forEach((otherVel, otherWindow) => {
+        if (window === otherWindow) return;
+        
+        const otherRect = otherWindow.getBoundingClientRect();
+        const otherLeft = otherWindow.offsetLeft;
+        const otherTop = otherWindow.offsetTop;
+
+        if (newX < otherLeft + otherWindow.offsetWidth &&
+            newX + window.offsetWidth > otherLeft &&
+            newY < otherTop + otherWindow.offsetHeight &&
+            newY + window.offsetHeight > otherTop) {
+            
+            // Calculate overlap amounts
+            const overlapLeft = newX + window.offsetWidth - otherLeft;
+            const overlapRight = otherLeft + otherWindow.offsetWidth - newX;
+            const overlapTop = newY + window.offsetHeight - otherTop;
+            const overlapBottom = otherTop + otherWindow.offsetHeight - newY;
+
+            // Find smallest overlap
+            const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+
+            // Resolve collision based on smallest overlap
+            if (minOverlap === overlapLeft) {
+                newX = otherLeft - window.offsetWidth;
+                velocity.x = -velocity.x * BOUNCE;
+            } 
+            else if (minOverlap === overlapRight) {
+                newX = otherLeft + otherWindow.offsetWidth;
+                velocity.x = -velocity.x * BOUNCE;
+            }
+            else if (minOverlap === overlapTop) {
+                newY = otherTop - window.offsetHeight;
+                velocity.y = -velocity.y * BOUNCE;
+            }
+            else if (minOverlap === overlapBottom) {
+                newY = otherTop + otherWindow.offsetHeight;
+                velocity.y = -velocity.y * BOUNCE;
+            }
+        }
+    });
+
+    // Apply damping and stopping
+    velocity.x *= FRICTION;
+    velocity.y *= FRICTION;
+    if (Math.abs(velocity.x) < 0.5) velocity.x = 0;
+    if (Math.abs(velocity.y) < 0.5) velocity.y = 0;
+
+    // Update position
+    window.style.left = `${newX}px`;
+    window.style.top = `${newY}px`;
+}
+
+// Window management
+let zIndex = 100;
+let windowCount = 0;
+const desktop = document.getElementById('desktop');
+
+function toggleSwitchState() {
+    switchState = !switchState;
+    const btn = document.getElementById('toggleSwitchBtn');
+    btn.textContent = `Switch State: ${switchState ? 'Normal' : 'Alternate'}`;
+    
+    switchableWindows.forEach(window => {
+        if (window.classList.contains('blue')) {
+            if (switchState) {
+                window.classList.remove('inactive');
+            } else {
+                window.classList.add('inactive');
+            }
+        } else if (window.classList.contains('red')) {
+            if (switchState) {
+                window.classList.add('inactive');
+            } else {
+                window.classList.remove('inactive');
+            }
+        }
+    });
+}
+
+function createWindow(title = "Untitled", content = "<p>New window content</p>", type = "normal") {
+    windowCount++;
+    const windowId = `window-${windowCount}`;
+    
+    const windowElement = document.createElement('div');
+    windowElement.className = 'window';
+    windowElement.id = windowId;
+    windowElement.style.width = '300px';
+    windowElement.style.height = '200px';
+    windowElement.style.left = `${Math.random() * (window.innerWidth - 340) + 20}px`;
+    windowElement.style.top = `${Math.random() * (window.innerHeight - 272) + 20}px`;
+    windowElement.style.zIndex = zIndex++;
+    
+    // Set window type and switchable state
+    if (type === 'blue') {
+        windowElement.classList.add('blue');
+        switchableWindows.add(windowElement);
+        if (!switchState) {
+            windowElement.classList.add('inactive');
+        }
+    } else if (type === 'red') {
+        windowElement.classList.add('red');
+        switchableWindows.add(windowElement);
+        if (switchState) {
+            windowElement.classList.add('inactive');
+        }
+    }
+    
+    windowElement.innerHTML = `
+        <div class="window-header">
+            <span class="window-title">${title}</span>
+            <div class="window-controls">
+                <span class="window-control close">×</span>
+            </div>
+        </div>
+        <div class="window-content">
+            ${content}
+            ${gravityEnabled ? '<p>Gravity is ON!</p>' : ''}
+            ${type !== 'normal' ? `<p>${type === 'blue' ? 'Blue' : 'Red'} Switch Window</p>` : ''}
+        </div>
+        <div class="resize-handle resize-handle-n"></div>
+        <div class="resize-handle resize-handle-e"></div>
+        <div class="resize-handle resize-handle-s"></div>
+        <div class="resize-handle resize-handle-w"></div>
+        <div class="resize-handle resize-handle-ne"></div>
+        <div class="resize-handle resize-handle-nw"></div>
+        <div class="resize-handle resize-handle-se"></div>
+        <div class="resize-handle resize-handle-sw"></div>
+        <div class="rotate-handle">↻</div>
+    `;
+    
+    desktop.appendChild(windowElement);
+    
+    // Initialize velocity
+    windows.set(windowElement, { 
+        x: gravityEnabled ? (Math.random() - 0.5) * 5 : 0,
+        y: gravityEnabled ? (Math.random() - 0.5) * 5 : 0
+    });
+    
+    // Setup interactions
+    setupDraggingWithPhysics(windowElement);
+    setupResizingWithIndicators(windowElement);
+    setupRotation(windowElement);
+    
+    // Close button
+    const closeBtn = windowElement.querySelector('.window-control.close');
+closeBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    windowElement.style.transition = 'opacity 0.3s';
+    windowElement.style.opacity = '0';
+    setTimeout(() => {
+        windowElement.remove();
+        windows.delete(windowElement);
+        switchableWindows.delete(windowElement);
+    }, 300);
+});
+    
+    // Focus window when clicked
+    windowElement.addEventListener('mousedown', () => {
+        windowElement.style.zIndex = zIndex++;
+    });
+    
+    windowElement.addEventListener('touchstart', () => {
+        windowElement.style.zIndex = zIndex++;
+    }, { passive: true });
+    
+    setupRotation(windowElement);
+    return windowElement;
+}
+
+function createVHSWindow(title, content, width = 300, height = 200) {
+    const win = document.createElement('div');
+    win.className = 'window vhs-window';
+    win.id = `window-${++windowCount}`;
+    win.style.width = `${width}px`;
+    win.style.height = `${height}px`;
+    win.style.left = `${Math.random() * (window.innerWidth - width - 40) + 20}px`;
+    win.style.top = `${Math.random() * (window.innerHeight - height - 72) + 20}px`;
+    win.style.zIndex = zIndex++;
+    
+    win.innerHTML = `
+        <div class="window-header">
+            <span class="window-title">${title}</span>
+            <div class="window-controls">
+                <span class="window-control close">×</span>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="vhs-content">${content}</div>
+            <div class="vhs-scanlines"></div>
+        </div>
+    `;
+    
+    desktop.appendChild(win);
+
+    // Dragging functionality for both mouse and touch
+    const header = win.querySelector('.window-header');
+    let isDragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    // Mouse events
+    header.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        offsetX = e.clientX - win.offsetLeft;
+        offsetY = e.clientY - win.offsetTop;
+        win.style.zIndex = zIndex++;
+        e.preventDefault();
+    });
+
+    // Touch events
+    header.addEventListener('touchstart', (e) => {
+        isDragging = true;
+        const touch = e.touches[0];
+        offsetX = touch.clientX - win.offsetLeft;
+        offsetY = touch.clientY - win.offsetTop;
+        win.style.zIndex = zIndex++;
+        e.preventDefault();
+    }, { passive: false });
+
+    // Mouse move
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        win.style.left = `${e.clientX - offsetX}px`;
+        win.style.top = `${e.clientY - offsetY}px`;
+    });
+
+    // Touch move
+    document.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        const touch = e.touches[0];
+        win.style.left = `${touch.clientX - offsetX}px`;
+        win.style.top = `${touch.clientY - offsetY}px`;
+        e.preventDefault(); // Prevent scrolling
+    }, { passive: false });
+
+    // End dragging
+    const stopDragging = () => {
+        isDragging = false;
+    };
+    
+    document.addEventListener('mouseup', stopDragging);
+    document.addEventListener('touchend', stopDragging);
+
+    // Add wave/bulge animation
+    let wavePhase = 0;
+    const waveHeight = 10;
+    const waveSpeed = 0.05;
+    const bulgeIntensity = 1.2;
+    
+    function animateVHS() {
+        wavePhase += waveSpeed;
+        
+        const waveOffset = Math.sin(wavePhase) * waveHeight;
+        const bulge = Math.abs(Math.sin(wavePhase * 0.7)) * bulgeIntensity;
+        
+        win.style.transform = `
+            translateY(${waveOffset}px)
+            scaleX(${1 + bulge * 0.05})
+            scaleY(${1 - bulge * 0.02})
+        `;
+        
+        win.querySelector('.vhs-content').style.transform = `
+            translateX(${Math.sin(wavePhase * 1.3) * 2}px)
+            skewX(${Math.sin(wavePhase * 0.9) * 1}deg)
+        `;
+        
+        if (Math.random() < 0.1) {
+            win.querySelector('.vhs-scanlines').style.background = `
+                repeating-linear-gradient(
+                    to bottom,
+                    transparent,
+                    transparent ${Math.floor(Math.random() * 3)}px,
+                    rgba(0,255,0,${Math.random() * 0.3}) ${Math.floor(Math.random() * 5)}px
+                )
+            `;
+        }
+        
+        requestAnimationFrame(animateVHS);
+    }
+    
+    animateVHS();
+    
+    // Close button (add touch support)
+    const closeBtn = win.querySelector('.close');
+    closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        win.style.transition = 'all 0.5s ease-out';
+        win.style.opacity = '0';
+        win.style.transform = 'translateY(-100px) scale(0.9)';
+        setTimeout(() => win.remove(), 500);
+    });
+    
+    // Touch support for close button
+    closeBtn.addEventListener('touchend', (e) => {
+        e.stopPropagation();
+        win.style.transition = 'all 0.5s ease-out';
+        win.style.opacity = '0';
+        win.style.transform = 'translateY(-100px) scale(0.9)';
+        setTimeout(() => win.remove(), 500);
+    });
+    
+    return win;
+}
+
+function setupDraggingWithPhysics(element) {
+    const header = element.querySelector('.window-header');
+    let isDragging = false;
+    let lastX = 0, lastY = 0;
+    let dragHistory = [];
+    const maxHistory = 5;
+    const velocity = windows.get(element);
+
+    // Mouse down
+    header.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        element.style.zIndex = zIndex++;
+        velocity.x = 0;
+        velocity.y = 0;
+        dragHistory = [];
+        e.preventDefault();
+    });
+
+    // Touch start
+    header.addEventListener('touchstart', (e) => {
+        isDragging = true;
+        const touch = e.touches[0];
+        lastX = touch.clientX;
+        lastY = touch.clientY;
+        element.style.zIndex = zIndex++;
+        velocity.x = 0;
+        velocity.y = 0;
+        dragHistory = [];
+        e.preventDefault();
+    }, { passive: false });
+
+    // Mouse/Touch move
+    const handleMove = (clientX, clientY) => {
+        if (!isDragging) return;
+        
+        // Calculate movement
+        const dx = clientX - lastX;
+        const dy = clientY - lastY;
+        lastX = clientX;
+        lastY = clientY;
+        
+        // Update position
+        element.style.left = `${element.offsetLeft + dx}px`;
+        element.style.top = `${element.offsetTop + dy}px`;
+        
+        // Store movement for velocity calculation
+        dragHistory.push({
+            x: element.offsetLeft,
+            y: element.offsetTop,
+            time: performance.now()
+        });
+        
+        // Keep history size limited
+        if (dragHistory.length > maxHistory) dragHistory.shift();
+    };
+
+    document.addEventListener('mousemove', (e) => {
+        handleMove(e.clientX, e.clientY);
+    });
+
+    document.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        const touch = e.touches[0];
+        handleMove(touch.clientX, touch.clientY);
+        e.preventDefault();
+    }, { passive: false });
+
+    // End dragging - calculate throw velocity
+    const stopDragging = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        // Calculate velocity from last few positions
+        if (dragHistory.length >= 2) {
+            const first = dragHistory[0];
+            const last = dragHistory[dragHistory.length - 1];
+            const timeDelta = (last.time - first.time) || 16;
+            
+            velocity.x = (last.x - first.x) / (timeDelta / 1000) * 0.01;
+            velocity.y = (last.y - first.y) / (timeDelta / 1000) * 0.01;
+        }
+    };
+    
+    document.addEventListener('mouseup', stopDragging);
+    document.addEventListener('touchend', stopDragging);
+}
+
+function setupResizingWithIndicators(element) {
+    const resizeHandles = element.querySelectorAll('.resize-handle');
+    let isResizing = false;
+    let handleDirection = '';
+    let startX, startY, startWidth, startHeight, startLeft, startTop;
+    
+    const startResize = (e, direction) => {
+        isResizing = true;
+        handleDirection = direction;
+        element.classList.add('window-resizing');
+        
+        if (e.type === 'mousedown') {
+            startX = e.clientX;
+            startY = e.clientY;
+        } else if (e.type === 'touchstart') {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        }
+        
+        startWidth = parseInt(document.defaultView.getComputedStyle(element).width, 10);
+        startHeight = parseInt(document.defaultView.getComputedStyle(element).height, 10);
+        startLeft = element.offsetLeft;
+        startTop = element.offsetTop;
+        
+        e.preventDefault();
+        e.stopPropagation();
+    };
+    
+    const resize = (e) => {
+        if (!isResizing) return;
+        
+        let clientX, clientY;
+        if (e.type === 'mousemove') {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        } else if (e.type === 'touchmove') {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        }
+        
+        const dx = clientX - startX;
+        const dy = clientY - startY;
+        
+        let newWidth = startWidth;
+        let newHeight = startHeight;
+        let newLeft = startLeft;
+        let newTop = startTop;
+        
+        if (handleDirection.includes('e')) {
+            newWidth = Math.max(150, startWidth + dx);
+        }
+        if (handleDirection.includes('w')) {
+            const widthChange = Math.min(startWidth - 150, dx);
+            newWidth = startWidth - widthChange;
+            newLeft = startLeft + widthChange;
+        }
+        if (handleDirection.includes('s')) {
+            newHeight = Math.max(100, startHeight + dy);
+        }
+        if (handleDirection.includes('n')) {
+            const heightChange = Math.min(startHeight - 100, dy);
+            newHeight = startHeight - heightChange;
+            newTop = startTop + heightChange;
+        }
+        
+        element.style.width = `${newWidth}px`;
+        element.style.height = `${newHeight}px`;
+        element.style.left = `${newLeft}px`;
+        element.style.top = `${newTop}px`;
+    };
+    
+    const stopResize = () => {
+        isResizing = false;
+        element.classList.remove('window-resizing');
+        document.removeEventListener('mousemove', resize);
+        document.removeEventListener('mouseup', stopResize);
+        document.removeEventListener('touchmove', resize);
+        document.removeEventListener('touchend', stopResize);
+    };
+    
+    resizeHandles.forEach(handle => {
+        const direction = handle.className.split(' ')[1].split('-')[2];
+        
+        handle.addEventListener('mousedown', (e) => {
+            startResize(e, direction);
+            document.addEventListener('mousemove', resize);
+            document.addEventListener('mouseup', stopResize);
+        });
+        
+        handle.addEventListener('touchstart', (e) => {
+            startResize(e, direction);
+            document.addEventListener('touchmove', resize, { passive: false });
+            document.addEventListener('touchend', stopResize);
+        }, { passive: false });
+    });
+}
+
+function setupRotation(element) {
+    const rotateHandle = element.querySelector('.rotate-handle');
+    let isRotating = false;
+    let startAngle = 0;
+    let currentRotation = 0;
+    let startX, startY;
+    let centerX, centerY;
+
+    const getRotation = () => {
+        const transform = window.getComputedStyle(element).transform;
+        if (transform === 'none') return 0;
+        const values = transform.split('(')[1].split(')')[0].split(',');
+        const a = values[0];
+        const b = values[1];
+        return Math.round(Math.atan2(b, a) * (180/Math.PI));
+    };
+
+    const startRotate = (e) => {
+        isRotating = true;
+        currentRotation = getRotation();
+        startAngle = currentRotation;
+        
+        const rect = element.getBoundingClientRect();
+        centerX = rect.left + rect.width/2;
+        centerY = rect.top + rect.height/2;
+        
+        startX = e.clientX || e.touches[0].clientX;
+        startY = e.clientY || e.touches[0].clientY;
+        
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
+    const rotate = (e) => {
+        if (!isRotating) return;
+        
+        const clientX = e.clientX || e.touches[0].clientX;
+        const clientY = e.clientY || e.touches[0].clientY;
+        
+        // Calculate angle from center to mouse position
+        const angle = Math.atan2(clientY - centerY, clientX - centerX) * (180/Math.PI);
+        const startMouseAngle = Math.atan2(startY - centerY, startX - centerX) * (180/Math.PI);
+        
+        // Calculate rotation delta
+        let rotation = currentRotation + angle - startMouseAngle;
+        
+        // Snap to 15 degree increments when holding Shift
+        if (e.shiftKey) {
+            rotation = Math.round(rotation / 15) * 15;
+        }
+        
+        // Apply rotation
+        element.style.transform = `rotate(${rotation}deg)`;
+    };
+
+    const stopRotate = () => {
+        isRotating = false;
+        document.removeEventListener('mousemove', rotate);
+        document.removeEventListener('mouseup', stopRotate);
+        document.removeEventListener('touchmove', rotate);
+        document.removeEventListener('touchend', stopRotate);
+    };
+
+    rotateHandle.addEventListener('mousedown', (e) => {
+        startRotate(e);
+        document.addEventListener('mousemove', rotate);
+        document.addEventListener('mouseup', stopRotate);
+    });
+
+    rotateHandle.addEventListener('touchstart', (e) => {
+        startRotate(e);
+        document.addEventListener('touchmove', rotate, { passive: false });
+        document.addEventListener('touchend', stopRotate);
+    }, { passive: false });
+}
+
+// Create control panel window
+const controlPanel = createWindow("Window Manager", `
+    <div class="control-panel">
+        <div class="control-row">
+            <span class="control-label">Title:</span>
+            <input type="text" class="control-input" id="windowTitle" value="New Window">
+        </div>
+        <div class="control-row">
+            <span class="control-label">Width:</span>
+            <input type="number" class="control-input" id="windowWidth" value="300">
+        </div>
+        <div class="control-row">
+            <span class="control-label">Height:</span>
+            <input type="number" class="control-input" id="windowHeight" value="200">
+        </div>
+        <div class="control-row">
+            <span class="control-label">Content:</span>
+            <textarea class="control-input" id="windowContent" rows="3">Hello World!</textarea>
+        </div>
+        
+        <div class="switch-controls">
+            <button class="switch-btn normal" id="createNormalBtn">Normal</button>
+            <button class="switch-btn blue" id="createBlueBtn">Blue</button>
+            <button class="switch-btn red" id="createRedBtn">Red</button>
+        </div>
+        
+        <button class="control-button" id="createWindowBtn">Create Window</button>
+        <button class="control-button" id="createVHSBtn">Create VHS Window</button>
+        <button class="gravity-toggle" id="gravityToggleBtn">Gravity: OFF</button>
+        <button class="switch-toggle" id="toggleSwitchBtn">Switch State: Normal</button>
+    </div>
+`);
+controlPanel.style.left = '20px';
+controlPanel.style.top = '20px';
+
+// Event listeners for control panel
+document.getElementById('createWindowBtn').addEventListener('click', () => {
+    const title = document.getElementById('windowTitle').value || 'Untitled';
+    const width = parseInt(document.getElementById('windowWidth').value) || 300;
+    const height = parseInt(document.getElementById('windowHeight').value) || 200;
+    const content = document.getElementById('windowContent').value || '<p>New window</p>';
+    
+    const newWindow = createWindow(title, content);
+    newWindow.style.width = `${width}px`;
+    newWindow.style.height = `${height}px`;
+    newWindow.style.left = `${Math.random() * (window.innerWidth - width - 40) + 20}px`;
+    newWindow.style.top = `${Math.random() * (window.innerHeight - height - 72) + 20}px`;
+});
+
+document.getElementById('createNormalBtn').addEventListener('click', () => {
+    const title = document.getElementById('windowTitle').value || 'Untitled';
+    const width = parseInt(document.getElementById('windowWidth').value) || 300;
+    const height = parseInt(document.getElementById('windowHeight').value) || 200;
+    const content = document.getElementById('windowContent').value || '<p>New window</p>';
+    
+    const newWindow = createWindow(title, content, 'normal');
+    newWindow.style.width = `${width}px`;
+    newWindow.style.height = `${height}px`;
+    newWindow.style.left = `${Math.random() * (window.innerWidth - width - 40) + 20}px`;
+    newWindow.style.top = `${Math.random() * (window.innerHeight - height - 72) + 20}px`;
+});
+
+document.getElementById('createBlueBtn').addEventListener('click', () => {
+    const title = document.getElementById('windowTitle').value || 'Untitled';
+    const width = parseInt(document.getElementById('windowWidth').value) || 300;
+    const height = parseInt(document.getElementById('windowHeight').value) || 200;
+    const content = document.getElementById('windowContent').value || '<p>New window</p>';
+    
+    const newWindow = createWindow(title, content, 'blue');
+    newWindow.style.width = `${width}px`;
+    newWindow.style.height = `${height}px`;
+    newWindow.style.left = `${Math.random() * (window.innerWidth - width - 40) + 20}px`;
+    newWindow.style.top = `${Math.random() * (window.innerHeight - height - 72) + 20}px`;
+});
+
+document.getElementById('createRedBtn').addEventListener('click', () => {
+    const title = document.getElementById('windowTitle').value || 'Untitled';
+    const width = parseInt(document.getElementById('windowWidth').value) || 300;
+    const height = parseInt(document.getElementById('windowHeight').value) || 200;
+    const content = document.getElementById('windowContent').value || '<p>New window</p>';
+    
+    const newWindow = createWindow(title, content, 'red');
+    newWindow.style.width = `${width}px`;
+    newWindow.style.height = `${height}px`;
+    newWindow.style.left = `${Math.random() * (window.innerWidth - width - 40) + 20}px`;
+    newWindow.style.top = `${Math.random() * (window.innerHeight - height - 72) + 20}px`;
+});
+
+document.getElementById('createVHSBtn').addEventListener('click', () => {
+    const title = document.getElementById('windowTitle').value || 'VHS PLAYER';
+    const content = document.getElementById('windowContent').value || 'NO SIGNAL';
+    const width = parseInt(document.getElementById('windowWidth').value) || 300;
+    const height = parseInt(document.getElementById('windowHeight').value) || 200;
+    
+    const vhsWindow = createVHSWindow(title, content, width, height);
+    vhsWindow.style.left = `${Math.random() * (window.innerWidth - width - 40) + 20}px`;
+    vhsWindow.style.top = `${Math.random() * (window.innerHeight - height - 72) + 20}px`;
+});
+
+document.getElementById('gravityToggleBtn').addEventListener('click', toggleGravity);
+document.getElementById('toggleSwitchBtn').addEventListener('click', toggleSwitchState);
+
+// Create initial window
+createWindow("Welcome to Physics!", `
+    <p>• Drag windows to throw them</p>
+    <p>• Toggle gravity from Window Manager</p>
+    <p>• Windows will collide with each other and edges</p>
+    <p>• Resize from edges/corners</p>
+    <p>• Have fun with the physics!</p>`);
+    </script>
+</body>
+</html>
