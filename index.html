@@ -419,10 +419,7 @@
     </div>
 
     <div class="taskbar">
-        <div class="start-button" id="startButton">
-            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4AkEEjIZWY9pLgAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAJklEQVQ4y2NgGAWjYBSMglEwCkbBKBgFIxUwDrcBmGgUjIJRMAoAAJ0kAf8jLQe8AAAAAElFTkSuQmCC" alt="Start">
-            Start
-        </div>
+        
         <div class="taskbar-clock" id="clock">
             4:25 PM
         </div>
@@ -455,7 +452,7 @@ const switchableWindows = new Set();
 function toggleGravity() {
     gravityEnabled = !gravityEnabled;
     const btn = document.getElementById('gravityToggleBtn');
-    btn.textContent = `Gravity: ${gravityEnabled ? 'ON' : 'OFF'}`;
+    btn.textContent = `gravity: ${gravityEnabled ? 'yes' : 'no'}`;
     btn.style.background = gravityEnabled ? '#4CAF50' : '#f44336';
     
     if (gravityEnabled) startPhysics();
@@ -582,8 +579,8 @@ function moveWindowWithCollision(window, dx, dy, velocity) {
     // Apply damping and stopping
     velocity.x *= FRICTION;
     velocity.y *= FRICTION;
-    if (Math.abs(velocity.x) < 0.5) velocity.x = 0;
-    if (Math.abs(velocity.y) < 0.5) velocity.y = 0;
+    if (Math.abs(velocity.x) < 0.1) velocity.x = 0;
+    if (Math.abs(velocity.y) < 0.1) velocity.y = 0;
 
     // Update position
     window.style.left = `${newX}px`;
@@ -598,7 +595,7 @@ const desktop = document.getElementById('desktop');
 function toggleSwitchState() {
     switchState = !switchState;
     const btn = document.getElementById('toggleSwitchBtn');
-    btn.textContent = `Switch State: ${switchState ? 'Normal' : 'Alternate'}`;
+    btn.textContent = `🟥🟦 switch: ${switchState ? 'blue' : 'red'}`;
     
     switchableWindows.forEach(window => {
         if (window.classList.contains('blue')) {
@@ -654,8 +651,6 @@ function createWindow(title = "Untitled", content = "<p>New window content</p>",
         </div>
         <div class="window-content">
             ${content}
-            ${gravityEnabled ? '<p>Gravity is ON!</p>' : ''}
-            ${type !== 'normal' ? `<p>${type === 'blue' ? 'Blue' : 'Red'} Switch Window</p>` : ''}
         </div>
         <div class="resize-handle resize-handle-n"></div>
         <div class="resize-handle resize-handle-e"></div>
@@ -1105,35 +1100,35 @@ function setupRotation(element) {
 }
 
 // Create control panel window
-const controlPanel = createWindow("Window Manager", `
+const controlPanel = createWindow("window maker", `
     <div class="control-panel">
         <div class="control-row">
-            <span class="control-label">Title:</span>
+            <span class="control-label">title:</span>
             <input type="text" class="control-input" id="windowTitle" value="New Window">
         </div>
         <div class="control-row">
-            <span class="control-label">Width:</span>
+            <span class="control-label">╌ width :</span>
             <input type="number" class="control-input" id="windowWidth" value="300">
         </div>
         <div class="control-row">
-            <span class="control-label">Height:</span>
+            <span class="control-label">╎ height:</span>
             <input type="number" class="control-input" id="windowHeight" value="200">
         </div>
         <div class="control-row">
-            <span class="control-label">Content:</span>
-            <textarea class="control-input" id="windowContent" rows="3">Hello World!</textarea>
+            <span class="control-label">content:</span>
+            <textarea class="control-input" id="windowContent" rows="3">...</textarea>
         </div>
         
         <div class="switch-controls">
-            <button class="switch-btn normal" id="createNormalBtn">Normal</button>
-            <button class="switch-btn blue" id="createBlueBtn">Blue</button>
-            <button class="switch-btn red" id="createRedBtn">Red</button>
+            <button class="switch-btn normal" id="createNormalBtn">normal</button>
+            <button class="switch-btn blue" id="createBlueBtn">blue</button>
+            <button class="switch-btn red" id="createRedBtn">red</button>
         </div>
         
-        <button class="control-button" id="createWindowBtn">Create Window</button>
-        <button class="control-button" id="createVHSBtn">Create VHS Window</button>
-        <button class="gravity-toggle" id="gravityToggleBtn">Gravity: OFF</button>
-        <button class="switch-toggle" id="toggleSwitchBtn">Switch State: Normal</button>
+        <button class="control-button" id="createWindowBtn">create normal</button>
+        <button class="control-button" id="createVHSBtn">create VHS window</button>
+        <button class="gravity-toggle" id="gravityToggleBtn">gravity: no</button>
+        <button class="switch-toggle" id="toggleSwitchBtn">🟥🟦 switch: blue</button>
     </div>
 `);
 controlPanel.style.left = '20px';
@@ -1193,8 +1188,8 @@ document.getElementById('createRedBtn').addEventListener('click', () => {
 });
 
 document.getElementById('createVHSBtn').addEventListener('click', () => {
-    const title = document.getElementById('windowTitle').value || 'VHS PLAYER';
-    const content = document.getElementById('windowContent').value || 'NO SIGNAL';
+    const title = document.getElementById('windowTitle').value || 'vhs window : )';
+    const content = document.getElementById('windowContent').value || '<p>New window</p>';
     const width = parseInt(document.getElementById('windowWidth').value) || 300;
     const height = parseInt(document.getElementById('windowHeight').value) || 200;
     
